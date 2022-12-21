@@ -98,7 +98,7 @@
 
 
 - name: Create a blog admin
-  shell: kubectl --kubeconfig ~/.kube/config exec -it "{{ db_pod.resources[0].metadata.name }}" -- /bin/bash -c "mysql -D ghost -e "UPDATE users SET name='ascn', password='\$2b\$10\$I0qGw2JkshH0iPpUY3k37uHwJUKS0LCdbyq/t89QfjZKZX36wwlpi', email='ascn@example.com', status='active', id='1';""
+  shell: kubectl --kubeconfig ~/.kube/config exec -it "{{ db_pod.resources[0].metadata.name }}" -- /bin/bash -c "mysql -D ghost -e "UPDATE users SET name='ascn', password='\$2b\$10\$I0qGw2JkshH0iPpUY3k37uHwJUKS0LCdbyq/t89QfjZKZX36wwlpi', email='ascn@example.com', status='active' where id='1';""
 
 
 
