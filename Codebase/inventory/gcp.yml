@@ -3,9 +3,9 @@ all:
  vars:
 
   # GKE cluster variables
-  gcp_project: <project_name>              # ID of GCP Project
+  gcp_project: ascn2223-369313             # ID of GCP Project
   gcp_auth_kind: serviceaccount            # Do not change
-  gcp_cred_file: <path_service_account>    # Path to service account keys (json file downloaded from GCP)
+  gcp_cred_file: project.json              # Path to service account keys (json file downloaded from GCP)
 
   gcp_zone: us-central1-a
   gcp_image_type: ubuntu_containerd
@@ -16,8 +16,7 @@ all:
 
   # APP variables
   ghost_ip: <GHOST_SERVICE_IP>     # Needs to be updated
-  ghost_port: <GHOST_PORT>         # Needs to be updated
+  ghost_port: 8000         # Needs to be updated
 
 
   # Additional variables
-  # ...

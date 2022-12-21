@@ -1,0 +1,105 @@
+---
+#create a service for ghost
+- name: Create a service for Ghost
+  kubernetes.core.k8s:
+    state: present
+    namespace: default
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: ghost-service 
+        labels:
+          app: ghost
+      spec:
+        type: LoadBalancer
+        selector:
+          app: ghost
+        ports:
+          - protocol: TCP
+            port: 8000
+            targetPort: 2368
+
+- name: run kubectl to retreive external IP - Wait for task to complete
+  shell: "kubectl get -n default service ghost-service -o wide | awk '{ print $4}' |  grep -v EXT"
+  register: k_ext_ip
+  until: k_ext_ip.stdout[0] != "<"
+  retries: 6
+  delay: 10
+
+#Get the service
+- name: Get the service IP
+  kubernetes.core.k8s_info:
+    kind: Service
+    label_selectors:
+      - app=ghost
+  register: ghost_service
+
+- name: Set the service IP
+  set_fact:
+    ghost_service_ip: "{{ ghost_service.resources[0].status.loadBalancer.ingress[0].ip }}"
+
+- name: Change gcp inventory file
+  template:
+    src: gcp
+    dest: inventory/gcp.yml
+
+#Create a pod to deploy ghost
+- name: Create a pod for Ghost
+  kubernetes.core.k8s:
+    state: present
+    namespace: default
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: ghost-deployment
+        labels:
+          app: ghost
+      spec:
+        selector:
+          matchLabels:
+            app: ghost
+        template:
+          metadata:
+            labels:
+              app: ghost
+          spec:
+            containers:
+            - name: ghost
+              image: ghost:5.14.1
+              ports:
+              - containerPort: 2368
+              env:
+              - name: url
+                value: "http://{{ ghost_service_ip }}:{{ ghost_port }}"
+              - name: database__client
+                value: mysql
+              - name: database__connection__host
+                value: "{{ MYSQL_HOST }}"
+              - name: database__connection__user
+                value: "{{ MYSQL_USER }}"
+              - name: database__connection__password
+                value: "{{ MYSQL_PASSWORD }}"
+              - name: database__connection__database
+                value: "{{ MYSQL_DATABASE }}"
+              - name: database__connection__port
+                value: "3306"
+
+
+
+- name: get db pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app=mysql
+  register: db_pod
+
+
+
+- name: Create a blog admin
+  shell: kubectl --kubeconfig ~/.kube/config exec -it "{{ db_pod.resources[0].metadata.name }}" -- /bin/bash -c "mysql -D ghost -e "UPDATE users SET name='ascn', password='\$2b\$10\$I0qGw2JkshH0iPpUY3k37uHwJUKS0LCdbyq/t89QfjZKZX36wwlpi', email='ascn@example.com', status='active', id='1';""
+
+
+
+

@@ -1,0 +1,18 @@
+---
+# Playbook to deploy Ghost and its components
+# TO DO
+- name: Deploy Database
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - ghost_db
+  tags:
+    - db_install
+
+- name: Deploy Ghost
+  hosts: localhost
+  roles:
+    - ghost
+  tags:
+    - ghost_install
+

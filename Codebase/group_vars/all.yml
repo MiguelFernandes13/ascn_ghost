@@ -1,0 +1,8 @@
+---
+MYSQL_HOST: sql-service
+
+MYSQL_USER: ghost
+
+MYSQL_PASSWORD: ghost #use vault
+
+MYSQL_DATABASE: ghost

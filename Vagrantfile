@@ -45,13 +45,17 @@ Vagrant.configure("2") do |config|
  end 
 
  config.vm.provision "shell", inline: <<-SHELL
-        echo "#{READ_PUBLIC_KEY}" >> /home/vagrant/.ssh/authorized_keys
-        sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
-        sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
-        systemctl restart sshd
-        apt update
-        apt-get install -y vim
-      SHELL
+        echo "[ALL|Task 1] Configure SSH Public Key authentication"
+  echo "#{READ_PUBLIC_KEY}" >> /home/vagrant/.ssh/authorized_keys
+  sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
+  sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+  systemctl restart sshd
+
+  echo "[ALL|Task 2] Update packages and install vim"
+  apt update
+  apt-get install -y vim
+
+SHELL
 
 end
 

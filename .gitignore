@@ -1,1 +1,4 @@
 .vagrant/
+project.json
+Vagrantfile
+Codebase/.DS_Store
