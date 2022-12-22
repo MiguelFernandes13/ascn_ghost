@@ -17,7 +17,7 @@
           app: ghost
         ports:
           - protocol: TCP
-            port: 8000
+            port: 80
             targetPort: 2368
 
 - name: run kubectl to retreive external IP - Wait for task to complete
@@ -85,6 +85,14 @@
                 value: "{{ MYSQL_DATABASE }}"
               - name: database__connection__port
                 value: "3306"
+              - name: mail__transport
+                value: SMTP
+              - name: mail__options__service
+                value: Mailgun
+              - name: mail__options__auth__user
+                value: "{{ ghost_email }}"
+              - name: mail__options__auth__pass
+                value: "{{ ghost_email_password }}"
 
 
 
@@ -95,10 +103,25 @@
       - app=mysql
   register: db_pod
 
+#- name: Wait for db pod is ready
+#  shell: kubectl get pod {{ db_pod.resources[0].metadata.name }} -o jsonpath='{.status.phase}'
+#  register: db_pod_ready
+#  until: db_pod_ready.stdout.find("Running") != -1
+#  retries: 6
+#  delay: 10
 
+- name: Wait for table users is created
+  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"SELECT count(*) FROM information_schema.tables WHERE table_schema = 'ghost' AND table_name = 'users'\""
+  register: table_users
+  until: table_users.stdout.find("1") != -1
+  retries: 6
+  delay: 10
 
 - name: Create a blog admin
-  shell: kubectl --kubeconfig ~/.kube/config exec -it "{{ db_pod.resources[0].metadata.name }}" -- /bin/bash -c "mysql -D ghost -e "UPDATE users SET name='ascn', password='\$2b\$10\$I0qGw2JkshH0iPpUY3k37uHwJUKS0LCdbyq/t89QfjZKZX36wwlpi', email='ascn@example.com', status='active' where id='1';""
+  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"UPDATE users SET name='ascn', password='\\\$2b\\\$10\\\$KgUaqGwMRhJH8IeyeYp1MOelsB9KlYjczsiujTLBR4S2lmNqGEMI2', email='ascn@example.com', status='active' where id=1;\""
+
+- name: Check if the blog admin was created
+  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"SELECT * FROM users;\""
 
 
 

@@ -6,3 +6,7 @@ MYSQL_USER: ghost
 MYSQL_PASSWORD: ghost #use vault
 
 MYSQL_DATABASE: ghost
+
+ghost_email:  postmaster@sandboxfc6e4346ac7d4da282981e6bd1b18673.mailgun.org
+
+ghost_email_password: e9a394860eee94a4d9fd12d37db78d96-eb38c18d-63a1e74c #use vault
