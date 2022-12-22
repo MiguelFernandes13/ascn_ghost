@@ -1,0 +1,28 @@
+#Undeploy Ghost
+- name: Get ghost deployment
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    label_selectors:
+      - app=ghost
+  register: ghost_deployment
+
+- name: Undeploy Ghost deployment
+  kubernetes.core.k8s:
+    state: absent
+    namespace: default
+    definition: "{{ ghost_deployment.resources[0] }}"
+  when: ghost_deployment.resources | length > 0
+
+- name: Get ghost service
+  kubernetes.core.k8s_info:
+    kind: Service
+    label_selectors:
+      - app=ghost
+  register: ghost_service
+
+- name: Undeploy Ghost service
+  kubernetes.core.k8s:
+    state: absent
+    namespace: default
+    definition: "{{ ghost_service.resources[0] }}"
+  when: ghost_service.resources | length > 0

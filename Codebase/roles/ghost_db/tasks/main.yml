@@ -54,6 +54,9 @@
         kind: StorageClass
         metadata:
           name: mysql-pv-storage
+          labels:
+            app: mysql
+            tier: database
         provisioner: pd.csi.storage.gke.io
         volumeBindingMode: WaitForFirstConsumer
         allowVolumeExpansion: true
@@ -69,6 +72,9 @@
         kind: PersistentVolumeClaim
         metadata:
           name: mysql-pv-claim
+          labels:
+            app: mysql
+            tier: database
         spec:
           accessModes:
             - ReadWriteOnce
