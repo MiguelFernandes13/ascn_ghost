@@ -114,7 +114,7 @@
   shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"SELECT count(*) FROM information_schema.tables WHERE table_schema = 'ghost' AND table_name = 'users'\""
   register: table_users
   until: table_users.stdout.find("1") != -1
-  retries: 6
+  retries: 15
   delay: 10
 
 - name: Create a blog admin
