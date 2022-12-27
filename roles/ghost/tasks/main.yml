@@ -107,8 +107,8 @@
   shell: kubectl get pod {{ db_pod.resources[0].metadata.name }} -o jsonpath='{.status.phase}'
   register: db_pod_ready
   until: db_pod_ready.stdout.find("Running") != -1
-  retries: 6
-  delay: 10
+  retries: 20
+  delay: 15
 
 - name: Wait for table users is created
   shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"SELECT count(*) FROM information_schema.tables WHERE table_schema = 'ghost' AND table_name = 'users'\""
@@ -117,11 +117,13 @@
   retries: 15
   delay: 10
 
-- name: Create a blog admin
-  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"UPDATE users SET name='ascn', password='\\\$2b\\\$10\\\$KgUaqGwMRhJH8IeyeYp1MOelsB9KlYjczsiujTLBR4S2lmNqGEMI2', email='ascn@example.com', status='active' where id=1;\""
+- name: Create a blog admin and ensure it is created
+  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"UPDATE users SET name='ascn', password='\\\$2b\\\$10\\\$KgUaqGwMRhJH8IeyeYp1MOelsB9KlYjczsiujTLBR4S2lmNqGEMI2', email='ascn@example.com', status='active' where id=1; SELECT * FROM users WHERE id=1;\""
+  register: blog_admin
+  until: blog_admin.stdout.find("ascn") != -1
+  retries: 15
+  delay: 10
 
-- name: Check if the blog admin was created
-  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"SELECT * FROM users;\""
 
 
 
