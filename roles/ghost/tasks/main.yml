@@ -95,7 +95,7 @@
               - name: mail__options__auth__user
                 value: "{{ ghost_email }}"
               - name: adapters__cache__redis-cache__host
-                value: ""
+                value: "localhost"
               - name: adapters__cache__redis-cache__port
                 value: 6379
               - name: adapters__cache__redis-cache__password
