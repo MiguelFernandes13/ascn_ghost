@@ -94,8 +94,16 @@
                 value: Mailgun
               - name: mail__options__auth__user
                 value: "{{ ghost_email }}"
-              - name: mail__options__auth__pass
-                value: "{{ ghost_email_password }}"
+              - name: adapters__cache__redis-cache__host
+                value: ""
+              - name: adapters__cache__redis-cache__port
+                value: 6379
+              - name: adapters__cache__redis-cache__password
+                value: {{ blog_password }}
+              - name: adapters__cache__imageSizes__adapter
+                value: redis-cache
+              - name: adapters__cache__imageSizes__ttl
+                value: 3600
 
 - name: Get pod name
   shell: kubectl get pods -n default -l app=ghost -o jsonpath='{.items[0].metadata.name}'
