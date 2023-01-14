@@ -58,22 +58,22 @@
       - tier=database
   register: mysql_pvc
 
-- name: Undeploy MySQL persistent volume claim
-  kubernetes.core.k8s:
-    state: absent
-    namespace: default
-    definition: "{{ mysql_pvc.resources[0] }}"
-  when: mysql_pvc.resources | length > 0
-
-- name: Wait for MySQL persistent volume claim to be deleted
-  kubernetes.core.k8s_info:
-    kind: PersistentVolumeClaim
-    label_selectors:
-      - app=mysql
-      - tier=database
-  register: mysql_pvc
-  until: mysql_pvc.resources | length == 0
-  retries: 10
-  delay: 10
+#- name: Undeploy MySQL persistent volume claim
+#  kubernetes.core.k8s:
+#    state: absent
+#    namespace: default
+#    definition: "{{ mysql_pvc.resources[0] }}"
+#  when: mysql_pvc.resources | length > 0
+#
+#- name: Wait for MySQL persistent volume claim to be deleted
+#  kubernetes.core.k8s_info:
+#    kind: PersistentVolumeClaim
+#    label_selectors:
+#      - app=mysql
+#      - tier=database
+#  register: mysql_pvc
+#  until: mysql_pvc.resources | length == 0
+#  retries: 10
+#  delay: 10
 
 

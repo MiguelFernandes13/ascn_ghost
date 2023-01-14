@@ -24,8 +24,8 @@
   shell: "kubectl get -n default service ghost-service -o wide | awk '{ print $4}' |  grep -v EXT"
   register: k_ext_ip
   until: k_ext_ip.stdout[0] != "<"
-  retries: 6
-  delay: 10
+  retries: 15
+  delay: 15
 
 #Get the service
 - name: Get the service IP
@@ -108,17 +108,35 @@
   register: db_pod_ready
   until: db_pod_ready.stdout.find("Running") != -1
   retries: 20
-  delay: 15
+  delay: 20
 
 - name: Wait for table users is created
   shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"SELECT count(*) FROM information_schema.tables WHERE table_schema = 'ghost' AND table_name = 'users'\""
   register: table_users
   until: table_users.stdout.find("1") != -1
   retries: 15
-  delay: 10
+  delay: 15
+
+#- name: Install bcrypt
+#  shell: python3 -m pip install bcrypt
+#
+#- name: Encrypt password for blog admin
+#  shell: python3 -c "import bcrypt; print(bcrypt.hashpw(b'{{ blog_password }}', bcrypt.gensalt(rounds=10)).decode('ascii'))"
+#  register: encrypted_password
+#
+#- name: Escape '$' in encrypted password
+#  shell: python3 -c "import re; print(re.sub(r'\\$', r'\\\\$', '{{ encrypted_password.stdout }}'))"
+#  register: escaped_password
+#
+#- name: Create a blog admin and ensure it is created
+#  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D {{ MYSQL_DATABASE}} -e \"UPDATE users SET name='{{ blog_name }}', password='{{ escaped_password.stdout }}', email='{{ blog_email }}', status='active' where id=1; SELECT * FROM users WHERE id=1;\""
+#  register: blog_admin
+#  until: blog_admin.stdout.find("ascn") != -1
+#  retries: 15
+#  delay: 10
 
 - name: Create a blog admin and ensure it is created
-  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D ghost -e \"UPDATE users SET name='ascn', password='\\\$2b\\\$10\\\$KgUaqGwMRhJH8IeyeYp1MOelsB9KlYjczsiujTLBR4S2lmNqGEMI2', email='ascn@example.com', status='active' where id=1; SELECT * FROM users WHERE id=1;\""
+  shell: kubectl exec -it {{ db_pod.resources[0].metadata.name }} -- /bin/bash -c "mysql -D {{ MYSQL_DATABASE}} -e \"UPDATE users SET name='{{ blog_name }}', password='\\\$2b\\\$10\\\$KgUaqGwMRhJH8IeyeYp1MOelsB9KlYjczsiujTLBR4S2lmNqGEMI2', email='{{ blog_email }}', status='active' where id=1; SELECT * FROM users WHERE id=1;\""
   register: blog_admin
   until: blog_admin.stdout.find("ascn") != -1
   retries: 15

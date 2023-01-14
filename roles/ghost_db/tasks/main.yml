@@ -1,5 +1,70 @@
 ---
-  - name: Create a pod for SQL Server
+  - name: Create a storage class for SQL Server
+    kubernetes.core.k8s:
+      state: present
+      namespace: default
+      definition:
+        apiVersion: storage.k8s.io/v1
+        kind: StorageClass
+        metadata:
+          name: mysql-pv-storage
+          labels:
+            app: mysql
+            tier: database
+        provisioner: pd.csi.storage.gke.io
+        volumeBindingMode: WaitForFirstConsumer
+        allowVolumeExpansion: true
+        reclaimPolicy: Retain
+        parameters:
+          type: pd-balanced
+
+  - name: Create a Persist Volume for SQL Server
+    kubernetes.core.k8s:
+      state: present
+      namespace: default
+      definition:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          name: mysql-pv
+          labels:
+            app: mysql
+            tier: database
+        spec:
+          reclaimPolicy: Retain
+          storageClassName: mysql-pv-storage
+          capacity:
+            storage: 10Gi
+          claimRef:
+            name: mysql-pv-claim
+          accessModes:
+            - ReadWriteOnce
+          csi:
+            driver: pd.csi.storage.gke.io
+            volumeHandle: mysql-pv
+            fsType: ext4
+
+  - name: Create a persistent volume claim for SQL Server
+    kubernetes.core.k8s:
+      state: present
+      namespace: default
+      definition:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: mysql-pv-claim
+          labels:
+            app: mysql
+            tier: database
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          storageClassName: mysql-pv-storage
+          resources:
+            requests:
+              storage: 10Gi
+
+  - name: Create a Deployment for SQL Server
     kubernetes.core.k8s:
       state: present
       namespace: default
@@ -23,6 +88,10 @@
                 app: mysql
                 tier: database
             spec:
+              volumes:
+              - name: mysql-persistent-storage
+                persistentVolumeClaim:
+                  claimName: mysql-pv-claim
               containers:
               - name: mysql
                 image: mysql:latest
@@ -40,48 +109,7 @@
                 volumeMounts:
                 - name: mysql-persistent-storage
                   mountPath: /var/lib/mysql
-              volumes:
-              - name: mysql-persistent-storage
-                persistentVolumeClaim:
-                  claimName: mysql-pv-claim
 
-  - name: Create a storage class for SQL Server
-    kubernetes.core.k8s:
-      state: present
-      namespace: default
-      definition:
-        apiVersion: storage.k8s.io/v1
-        kind: StorageClass
-        metadata:
-          name: mysql-pv-storage
-          labels:
-            app: mysql
-            tier: database
-        provisioner: pd.csi.storage.gke.io
-        volumeBindingMode: WaitForFirstConsumer
-        allowVolumeExpansion: true
-        parameters:
-          type: pd-balanced
-
-  - name: Create a persistent volume claim for SQL Server
-    kubernetes.core.k8s:
-      state: present
-      namespace: default
-      definition:
-        apiVersion: v1
-        kind: PersistentVolumeClaim
-        metadata:
-          name: mysql-pv-claim
-          labels:
-            app: mysql
-            tier: database
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          storageClassName: mysql-pv-storage
-          resources:
-            requests:
-              storage: 10Gi
 
   - name: Create a service for SQL Server
     kubernetes.core.k8s:
