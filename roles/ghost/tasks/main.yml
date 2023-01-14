@@ -123,6 +123,13 @@
               type: Utilization
               averageUtilization: 50
 
+- name: Wait for Autoscale be ready
+  shell: kubectl get hpa ghost-hpa -o jsonpath='{.status.currentReplicas}'
+  register: hpa_ready
+  until: hpa_ready.stdout.find("1") != -1
+  retries: 15
+  delay: 15
+
 
 - name: get db pod
   kubernetes.core.k8s_info:

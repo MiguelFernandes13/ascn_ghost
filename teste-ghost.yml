@@ -1,0 +1,20 @@
+---
+
+- import_playbook: deploy-ghost.yml
+
+- name: Tests
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - { role: test_admin }
+
+- import_playbook: undeploy-ghost.yml
+
+- import_playbook: deploy-ghost.yml
+
+- name: Tests
+  hosts: localhost
+  gather_facts: yes
+  roles:
+    - { role: test_admin2 }
+

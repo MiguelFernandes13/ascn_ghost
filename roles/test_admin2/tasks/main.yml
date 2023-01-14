@@ -1,0 +1,14 @@
+---
+
+- name: Verify if the post is created
+  ansible.builtin.uri: 
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/posts/"
+    method: GET
+    status_code: 200
+    headers:
+      Cookie: "{{ cookie_token }}"
+  register: result
+  until: result.status == 200
+  retries: 3
+  delay: 5
+  

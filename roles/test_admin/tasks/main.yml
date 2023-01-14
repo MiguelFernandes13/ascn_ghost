@@ -1,0 +1,133 @@
+---
+
+- name: Generate the Authentication Token
+  ansible.builtin.uri:
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/session/"
+    method: POST
+    status_code: 201
+    body_format: "json"
+    body: '{"username": "{{ blog_email }}", "password": "{{ blog_password }}"}'
+  register: token
+  until: token.status == 201
+  delay: 5
+  retries: 5
+
+- name: Save the token
+  set_fact:
+    cookie_token: "{{ token.set_cookie }}"
+
+- name: Use the session cookie to create a post
+  ansible.builtin.uri:
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/posts/"
+    method: POST
+    status_code: 201
+    body_format: "json"
+    body: '{"posts": [{"title": "My test post", "status": "published"}]}'
+    headers:
+      Cookie: "{{ token.set_cookie }}"
+  register: post
+  until: post.status == 201
+  delay: 5
+  retries: 5
+
+- name: Save the post id
+  set_fact:
+    post_id: "{{ post.json.posts[0].id }}"
+
+- name: Create another post
+  ansible.builtin.uri:
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/posts/"
+    method: POST
+    status_code: 201
+    body_format: "json"
+    body: '{"posts": [{"title": "My test post2"}]}'
+    headers:
+      Cookie: "{{ token.set_cookie }}"
+  register: post2
+  until: post.status == 201
+  delay: 5
+  retries: 5
+
+- name: Delete a Post
+  ansible.builtin.uri:
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/posts/{{ post2.json.posts[0].id }}"
+    method: DELETE
+    status_code: 204
+    headers:
+      Cookie: "{{ token.set_cookie }}"
+  register: delete
+  until: delete.status == 204
+  delay: 5
+  retries: 5
+
+#- name: Create a Tier
+#  ansible.builtin.uri:
+#    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/tiers/"
+#    method: POST
+#    status_code: 201
+#    body_format: "json"
+#    body: '{"tiers": [{"name": "My test tier", "description": "My test tier description", "monthly_price": 1000, "currency": "usd", "visibility": "public", "benefits": ["Benefit 1", "Benefit 2", "Benefit 3"] }]}'
+#    headers:
+#      Cookie: "{{ token.set_cookie }}"
+#  register: tier
+#  until: tier.status == 201
+#  delay: 5
+#  retries: 5
+#
+#- name: Updating a Tier
+#  ansible.builtin.uri:
+#    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/tiers/{{ tier.json.tiers[0].id }}/"
+#    method: PUT
+#    status_code: 200
+#    body_format: "json"
+#    body: '{"tiers": [{"name": "My new test tier", "description": "My new test tier description"}]}'
+#    headers:
+#      Cookie: "{{ token.set_cookie }}"
+#  register: update_tier
+#  until: update_tier.status == 200
+#  delay: 5
+#  retries: 5
+
+
+- name: Creating a Page
+  ansible.builtin.uri:
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/pages/"
+    method: POST
+    status_code: 201
+    body_format: "json"
+    body: '{"pages": [{"title": "My test page", "status": "published"}]}'
+    headers:
+      Cookie: "{{ token.set_cookie }}"
+  register: page
+  until: page.status == 201
+  delay: 5
+  retries: 5
+
+- name: Creating a Tag
+  ansible.builtin.uri:
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/tags/"
+    method: POST
+    status_code: 201
+    body_format: "json"
+    body: '{"tags": [{"name": "My test tag", "slug": "my-test-tag", "description": "My test tag description", "color": "#ffffff"}]}'
+    headers:
+      Cookie: "{{ token.set_cookie }}"
+  register: tag
+  until: tag.status == 201
+  delay: 5
+  retries: 5
+
+- name: Creating a Member
+  ansible.builtin.uri:
+    url: "http://{{ ghost_ip }}:{{ghost_port}}/ghost/api/admin/members/"
+    method: POST
+    status_code: 201
+    body_format: "json"
+    body: '{"members": [{"name": "My test member", "email": "miguelffernandes13@gmail.com"}]}'
+    headers:
+      Cookie: "{{ token.set_cookie }}"
+  register: member
+  until: member.status == 201
+  delay: 5
+  retries: 5
+  
