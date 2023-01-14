@@ -46,3 +46,27 @@
   until: ghost_service.resources | length == 0
   retries: 10
   delay: 10
+
+- name: Get Autoscaling
+  kubernetes.core.k8s_info:
+    kind: HorizontalPodAutoscaler
+    label_selectors:
+      - app=ghost
+  register: ghost_hpa
+
+- name: Undeploy autoscaling
+  kubernetes.core.k8s:
+    state: absent
+    namespace: default
+    definition: "{{ ghost_hpa.resources[0] }}"
+  when: ghost_hpa.resources | length > 0
+
+- name: Wait for autoscaling to be deleted
+  kubernetes.core.k8s_info:
+    kind: HorizontalPodAutoscaler
+    label_selectors:
+      - app=ghost
+  register: ghost_hpa
+  until: ghost_hpa.resources | length == 0
+  retries: 10
+  delay: 10

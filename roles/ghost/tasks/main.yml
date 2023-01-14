@@ -44,8 +44,8 @@
     src: gcp
     dest: inventory/gcp.yml
 
-#Create a pod to deploy ghost
-- name: Create a pod for Ghost
+#Create a Deployment to deploy ghost
+- name: Create a Deployment for Ghost
   kubernetes.core.k8s:
     state: present
     namespace: default
@@ -70,6 +70,9 @@
               image: ghost:5.14.1
               ports:
               - containerPort: 2368
+              resources:
+                requests:
+                  cpu: "250m"
               env:
               - name: url
                 value: "http://{{ ghost_service_ip }}:{{ ghost_port }}"
@@ -94,6 +97,31 @@
               - name: mail__options__auth__pass
                 value: "{{ ghost_email_password }}"
 
+- name: Autoscale for Ghost app
+  kubernetes.core.k8s:
+    state: present
+    namespace: default
+    definition:
+      apiVersion: autoscaling/v2beta2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: ghost-hpa
+        labels:
+          app: ghost
+      spec:
+        scaleTargetRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: ghost-deployment
+        minReplicas: 1
+        maxReplicas: 15
+        metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 50
 
 
 - name: get db pod
@@ -141,8 +169,3 @@
   until: blog_admin.stdout.find("ascn") != -1
   retries: 15
   delay: 10
-
-
-
-
-
