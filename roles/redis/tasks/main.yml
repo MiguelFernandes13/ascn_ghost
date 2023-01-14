@@ -1,0 +1,102 @@
+---
+- name: Create a namespace
+  shell: kubectl create namespace redis
+
+- name: Create a storage class for redis
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: redis-sc
+      provisioner: kubernetes.io/gce-pd
+      volumeBindingMode: WaitForFirstConsumer
+      allowVolumeExpansion: true
+      reclaimPolicy: Delete
+
+- name: Create a persistent volume for redis
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        name: redis-pv-1
+      spec:
+        capacity:
+          storage: 1Gi
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: redis-sc
+        gcePersistentDisk:
+          pdName: redis-pv-1
+          fsType: ext4
+
+- name: Create a second persistent volume
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        name: redis-pv-2
+      spec:
+        capacity:
+          storage: 1Gi
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: redis-sc
+        gcePersistentDisk:
+          pdName: redis-pv-2
+          fsType: ext4
+
+- name: Create a third persisten volume
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        name: redis-pv-3
+      spec:
+        capacity:
+          storage: 2Gi
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: redis-sc
+        gcePersistentDisk:
+          pdName: redis-pv-3
+          fsType: ext4
+
+- name: Create the ConfigMap for redis
+  shell: kubectl apply -n redis -f redis-config.yaml
+
+- name: Get the ConfigMap list in the redis Namespace
+  kubernetes.core.k8s_info:
+    kind: ConfigMap
+    namespace: redis
+  register: redis_config
+
+- name: Deploy Redis Using StatefulSet
+  shell: kubectl apply -n redis -f redis-statefulset.yaml
+
+- name: Create Headless Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: redis
+      spec:
+        clusterIP: None
+        ports:
+          - port: 6379
+            targetPort: 6379
+            name: redis
+        selector:
+          app: redis
+
+
+    

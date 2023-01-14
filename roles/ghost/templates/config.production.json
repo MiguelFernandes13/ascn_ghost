@@ -1,0 +1,13 @@
+"adapters": {
+    "cache": {
+      "redis-cache": {
+        "host": "localhost",
+        "port": 6379,
+        "password": {{ blog_password }},
+      },
+      "imageSizes": {
+        "adapter": "redis-cache",
+        "ttl": 3600
+      }
+    }
+  }

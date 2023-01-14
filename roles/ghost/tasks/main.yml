@@ -97,6 +97,17 @@
               - name: mail__options__auth__pass
                 value: "{{ ghost_email_password }}"
 
+- name: Get pod name
+  shell: kubectl get pods -n default -l app=ghost -o jsonpath='{.items[0].metadata.name}'
+  register: pod_name
+
+- name: Change the ghost config file 
+  shell: kubectl cp config.production.json {{ pod_name.stdout }}:/var/lib/ghost/config.production.json -n default 
+
+- name: Restart the ghost pod
+  shell: kubectl rollout restart deployment ghost-deployment -n default
+
+
 - name: Autoscale for Ghost app
   kubernetes.core.k8s:
     state: present
