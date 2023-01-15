@@ -99,7 +99,7 @@
               - name: adapters__cache__redis-cache__port
                 value: 6379
               - name: adapters__cache__redis-cache__password
-                value: {{ blog_password }}
+                value: "{{ blog_password }}"
               - name: adapters__cache__imageSizes__adapter
                 value: redis-cache
               - name: adapters__cache__imageSizes__ttl
