@@ -1,6 +1,14 @@
 ---
 # Playbook to deploy Ghost and its components
 # TO DO
+- name: Deploy Redis
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - redis
+  tags:
+    - redis_install
+    
 - name: Deploy Database
   hosts: localhost
   gather_facts: false
